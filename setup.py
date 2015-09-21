@@ -20,7 +20,6 @@ CLASSIFIERS = [
 	"Topic :: System :: Networking",
 ]
 
-
 import push_notifications
 
 setup(
@@ -40,4 +39,5 @@ setup(
 	long_description=README,
 	url="https://github.com/jleclanche/django-push-notifications",
 	version=push_notifications.__version__,
+	include_package_data=True,
 )
