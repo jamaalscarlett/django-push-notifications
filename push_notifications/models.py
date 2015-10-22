@@ -8,6 +8,30 @@ from django.utils.translation import ugettext_lazy as _
 from .fields import HexIntegerField
 
 
+
+
+class ADMTokenManager(models.Manager):
+	def get_queryset(self):
+		return ADMTokenQuerySet(self.model)
+
+
+class ADMTokenQuerySet(models.query.QuerySet):
+	pass
+
+@python_2_unicode_compatible
+class ADMToken(models.Model):
+	token = models.CharField(verbose_name=_("Token"), max_length=80)
+	expiration_date = models.DateTimeField()
+	request_id = models.CharField(verbose_name=_("Request ID"), max_length=36)
+
+	objects = ADMTokenManager()
+
+	class Meta:
+		verbose_name = _("Amazon Device Messaging Access Token")
+
+	def __str__(self):
+		return 'hello'
+
 @python_2_unicode_compatible
 class Device(models.Model):
 	name = models.CharField(max_length=255, verbose_name=_("Name"), blank=True, null=True)
@@ -98,3 +122,43 @@ class APNSDevice(Device):
 def get_expired_tokens():
 	from .apns import apns_fetch_inactive_ids
 	return apns_fetch_inactive_ids()
+
+class ADMDeviceManager(models.Manager):
+	def get_queryset(self):
+		return ADMDeviceQuerySet(self.model)
+
+
+class ADMDeviceQuerySet(models.query.QuerySet):
+	def send_message(self, message, **kwargs):
+		if self:
+			from .adm import adm_send_bulk_message
+
+			data = kwargs.pop("extra", {})
+			if message is not None:
+				data["message"] = message
+
+			reg_ids = [rec.registration_id for rec in self if rec.active]
+			return adm_send_bulk_message(registration_ids=reg_ids, data=data, **kwargs)
+
+
+class ADMDevice(Device):
+	# device_id cannot be a reliable primary key as fragmentation between different devices
+	# can make it turn out to be null and such:
+	# http://android-developers.blogspot.co.uk/2011/03/identifying-app-installations.html
+	device_id1 = HexIntegerField(verbose_name=_("Device ID"), blank=True, null=True, db_index=True,
+								help_text=_("ANDROID_ID / TelephonyManager.getDeviceId() (always as hex)"))
+	registration_id = models.TextField(verbose_name=_("Registration ID"))
+
+	objects = ADMDeviceManager()
+
+	class Meta:
+		verbose_name = _("ADM device")
+
+	def send_message(self, message, **kwargs):
+		from .adm import adm_send_message
+		data = kwargs.pop("extra", {})
+		if message is not None:
+			data["message"] = message
+		return adm_send_message(registration_id=self.registration_id, data=data, **kwargs)
+
+
