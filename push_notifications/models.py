@@ -8,30 +8,6 @@ from django.utils.translation import ugettext_lazy as _
 from .fields import HexIntegerField
 
 
-
-
-class ADMTokenManager(models.Manager):
-	def get_queryset(self):
-		return ADMTokenQuerySet(self.model)
-
-
-class ADMTokenQuerySet(models.query.QuerySet):
-	pass
-
-@python_2_unicode_compatible
-class ADMToken(models.Model):
-	token = models.CharField(verbose_name=_("Token"), max_length=80)
-	expiration_date = models.DateTimeField()
-	request_id = models.CharField(verbose_name=_("Request ID"), max_length=36)
-
-	objects = ADMTokenManager()
-
-	class Meta:
-		verbose_name = _("Amazon Device Messaging Access Token")
-
-	def __str__(self):
-		return 'hello'
-
 @python_2_unicode_compatible
 class Device(models.Model):
 	name = models.CharField(max_length=255, verbose_name=_("Name"), blank=True, null=True)
@@ -123,6 +99,7 @@ def get_expired_tokens():
 	from .apns import apns_fetch_inactive_ids
 	return apns_fetch_inactive_ids()
 
+
 class ADMDeviceManager(models.Manager):
 	def get_queryset(self):
 		return ADMDeviceQuerySet(self.model)
@@ -162,3 +139,25 @@ class ADMDevice(Device):
 		return adm_send_message(registration_id=self.registration_id, data=data, **kwargs)
 
 
+class ADMTokenManager(models.Manager):
+	def get_queryset(self):
+		return ADMTokenQuerySet(self.model)
+
+
+class ADMTokenQuerySet(models.query.QuerySet):
+	pass
+
+
+@python_2_unicode_compatible
+class ADMToken(models.Model):
+	token = models.CharField(verbose_name=_("Token"), max_length=80)
+	expiration_date = models.DateTimeField()
+	request_id = models.CharField(verbose_name=_("Request ID"), max_length=36)
+
+	objects = ADMTokenManager()
+
+	class Meta:
+		verbose_name = _("Amazon Device Messaging Access Token")
+
+	def __str__(self):
+		return 'hello'

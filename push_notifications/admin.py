@@ -5,7 +5,7 @@ from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext_lazy as _
 from .models import APNSDevice, GCMDevice, get_expired_tokens, ADMDevice, ADMToken
 from django.db import connection
-import pdb
+# import pdb
 
 User = get_user_model()
 
@@ -16,7 +16,6 @@ class DeviceAdmin(admin.ModelAdmin):
 	list_filter = ("active",)
 	actions = (
 		"send_message", "send_bulk_message", "prune_devices", "enable", "disable")
-
 
 	def send_message(self, request, queryset):
 		ret = []
@@ -113,12 +112,11 @@ class ADMDeviceAdmin(DeviceAdmin):
 
 class ADMTokenAdmin(admin.ModelAdmin):
 	list_display = ("__str__", "expiration_date")
-	#search_fields = ("name", "device_id", "user__%s" % (User.USERNAME_FIELD))
-	#list_filter = ("active",)
+	# search_fields = ("name", "device_id", "user__%s" % (User.USERNAME_FIELD))
+	# list_filter = ("active",)
 
 
 admin.site.register(APNSDevice, DeviceAdmin)
 admin.site.register(GCMDevice, GCMDeviceAdmin)
 admin.site.register(ADMDevice, ADMDeviceAdmin)
 admin.site.register(ADMToken, ADMTokenAdmin)
-
