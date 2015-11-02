@@ -1,11 +1,32 @@
 from __future__ import unicode_literals
 
+from datetime import datetime, timedelta
+import json
+try:
+	from urllib.request import Request, urlopen
+	from urllib.parse import urlencode
+except ImportError:
+	from urllib2 import Request, urlopen
+	from urllib import urlencode
+
 from django.conf import settings
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 from .fields import HexIntegerField
+
+
+CLIENT_ID = 'amzn1.application-oa2-client.31e9a7961fce47aebaa9d3ac4ef9c318'
+CLIENT_SECRET = '937656fa3477255af004e56d767055423aaefe64260e8495455e02001a14a1bf'
+
+# Data used to request authorization tokens.
+ACCESS_TOKEN_REQUEST_DATA = {
+	"grant_type": "client_credentials",
+	"scope": "messaging:push",
+	"client_secret": CLIENT_SECRET,
+	"client_id": CLIENT_ID
+}
 
 
 @python_2_unicode_compatible
@@ -160,4 +181,24 @@ class ADMToken(models.Model):
 		verbose_name = _("Amazon Device Messaging Access Token")
 
 	def __str__(self):
-		return 'hello'
+		return self.request_id
+
+
+def request_message_token():
+	try:
+		request = Request("https://api.amazon.com/auth/O2/token")
+		request.add_header('Content-Type', 'application/x-www-form-urlencoded')
+		req_data = urlencode(ACCESS_TOKEN_REQUEST_DATA)
+		response = urlopen(request, req_data)
+
+		request_id = response.info().get('x-amzn-RequestId')
+		dump = json.load(response)
+		if dump['token_type'] == 'bearer' and dump['scope'] == 'messaging:push':
+			token = dump['access_token']
+			expiration = dump['expires_in']
+			expiration = datetime.now() + timedelta(0, expiration)
+			ADMToken(token=token, expiration_date=expiration, request_id=request_id).save()
+		else:
+			return "Invalid request"
+	except Exception as e:
+		return e.message

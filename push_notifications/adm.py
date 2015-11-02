@@ -26,14 +26,6 @@ class ADMError(NotificationError):
     pass
 
 
-def _chunks(l, n):
-    """
-    Yield successive chunks from list \a l with a minimum size \a n
-    """
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
-
-
 def _adm_send(data, content_type):
     key = SETTINGS.get("ADM_API_KEY")
     if not key:
