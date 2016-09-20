@@ -3,7 +3,7 @@ from django.contrib import admin, messages
 from django.utils.translation import ugettext_lazy as _
 from .gcm import GCMError
 from .apns import APNSServerError, APNS_ERROR_MESSAGES
-from .models import APNSDevice, GCMDevice, WNSDevice, get_expired_tokens
+from .models import (APNSDevice, GCMDevice, WNSDevice, get_expired_tokens, ADMDevice)
 from .settings import PUSH_NOTIFICATIONS_SETTINGS as SETTINGS
 
 User = apps.get_model(*SETTINGS["USER_MODEL"].split("."))
@@ -102,3 +102,4 @@ class GCMDeviceAdmin(DeviceAdmin):
 admin.site.register(APNSDevice, DeviceAdmin)
 admin.site.register(GCMDevice, GCMDeviceAdmin)
 admin.site.register(WNSDevice, DeviceAdmin)
+admin.site.register(ADMDevice, DeviceAdmin)

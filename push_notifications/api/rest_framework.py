@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.fields import IntegerField
 
-from push_notifications.models import APNSDevice, GCMDevice, WNSDevice
+from push_notifications.models import APNSDevice, GCMDevice, WNSDevice, ADMDevice
 from push_notifications.fields import hex_re
 from push_notifications.fields import UNSIGNED_64BIT_INT_MAX_VALUE
 from push_notifications.settings import PUSH_NOTIFICATIONS_SETTINGS as SETTINGS
@@ -194,4 +194,25 @@ class WNSDeviceViewSet(DeviceViewSetMixin, ModelViewSet):
 
 
 class WNSDeviceAuthorizedViewSet(AuthorizedMixin, WNSDeviceViewSet):
+	pass
+
+
+class ADMDeviceSerializer(UniqueRegistrationSerializerMixin, ModelSerializer):
+	device_id = HexIntegerField(
+		help_text="ANDROID_ID / TelephonyManager.getDeviceId() (e.g: 0x01)",
+		style={"input_type": "text"},
+		required=False,
+		allow_null=True
+	)
+
+	class Meta(DeviceSerializerMixin.Meta):
+		model = ADMDevice
+
+
+class ADMDeviceViewSet(DeviceViewSetMixin, ModelViewSet):
+	queryset = ADMDevice.objects.all()
+	serializer_class = ADMDeviceSerializer
+
+
+class ADMDeviceAuthorizedViewSet(AuthorizedMixin, ADMDeviceViewSet):
 	pass

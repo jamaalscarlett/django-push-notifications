@@ -1,7 +1,7 @@
 # python compiled
 __pycache__
 *.pyc
-
+dist/
 # distutils
 MANIFEST
 build

@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 from django.db import models
+from django.db.models import fields
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
@@ -167,3 +168,45 @@ class WNSDevice(Device):
 def get_expired_tokens(cerfile=None):
 	from .apns import apns_fetch_inactive_ids
 	return apns_fetch_inactive_ids(cerfile)
+
+
+class ADMDeviceManager(models.Manager):
+	def get_queryset(self):
+		return ADMDeviceQuerySet(self.model)
+
+
+class ADMDeviceQuerySet(models.query.QuerySet):
+	def send_message(self, message, **kwargs):
+		if self:
+			from .adm import adm_send_bulk_message
+
+			data = kwargs.pop("extra", {})
+			if message is not None:
+				data["message"] = message
+
+			reg_ids = list(self.filter(active=True).values_list('registration_id', flat=True))
+			return adm_send_bulk_message(registration_ids=reg_ids, data=data, **kwargs)
+
+
+class ADMDevice(Device):
+	# device_id cannot be a reliable primary key as fragmentation between different devices
+	# can make it turn out to be null and such:
+	# http://android-developers.blogspot.co.uk/2011/03/identifying-app-installations.html
+	device_id = fields.CharField(
+		verbose_name=_("Device ID"), blank=True, null=True, db_index=True,
+		help_text=_("ANDROID_ID /TelephonyManager.getDeviceId() (always as hex)"),
+		max_length=250
+	)
+	registration_id = models.TextField(verbose_name=_("Registration ID"))
+
+	objects = ADMDeviceManager()
+
+	class Meta:
+		verbose_name = _("ADM device")
+
+	def send_message(self, message, **kwargs):
+		from .adm import adm_send_message
+		data = kwargs.pop("extra", {})
+		if message is not None:
+			data["message"] = message
+		return adm_send_message(registration_id=self.registration_id, data=data)

@@ -34,3 +34,7 @@ PUSH_NOTIFICATIONS_SETTINGS.setdefault("USER_MODEL", settings.AUTH_USER_MODEL)
 
 # API endpoint settings
 PUSH_NOTIFICATIONS_SETTINGS.setdefault("UPDATE_ON_DUPLICATE_REG_ID", False)
+
+# ADM
+PUSH_NOTIFICATIONS_SETTINGS.setdefault("ADM_POST_URL", "https://api.amazon.com/messaging/registrations/")
+PUSH_NOTIFICATIONS_SETTINGS.setdefault("AMAZON_TOKEN_URL", "https://api.amazon.com/auth/O2/token")
